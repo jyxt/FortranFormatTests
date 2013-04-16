@@ -82,20 +82,36 @@ public class WatchDir {
     /**
      * Creates a WatchService and registers the given directory
      */
-    WatchDir(Path dir, boolean recursive, SimpleUI UI) throws IOException {
+    WatchDir(final Path dir, boolean recursive, SimpleUI UI) throws IOException {
         this.watcher = FileSystems.getDefault().newWatchService();
         this.keys = new HashMap<>();
         this.recursive = recursive;
 
         if (recursive) {
             System.out.format("Scanning %s ...\n", dir);
-            UI.updateProgress("Scanning "+dir);
+            
+
+            java.awt.EventQueue.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    WatchDir.this.UI.updateProgress("Scanning "+dir);
+                }
+            });
+            
+            
             registerAll(dir);
             System.out.println("Done.");
             UI.updateProgress("Done");
         } else {
             register(dir);
-            UI.updateProgress(dir+" registered");
+        //    UI.updateProgress(dir+" registered");
+         
+            java.awt.EventQueue.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    WatchDir.this.UI.updateProgress(dir+" registered");
+                }
+            });
         }
 
         // enable trace after initial registration
@@ -154,22 +170,35 @@ public class WatchDir {
                         try (BufferedReader in2 = new BufferedReader(new FileReader(child.toString()));
                              BufferedReader in = new BufferedReader(new FileReader(child.toString()+"_Original"))) {
                             String strRead, strRead2;
+                            int line=0;
+                            
                             while ((strRead = in.readLine()) != null && (strRead2 = in2.readLine()) != null) {
+                                line++;
+                                final int lineNum = line;
                                 LinkedList<diff_match_patch.Diff> Diffs = diff.diff_main(strRead, strRead2);
-                                for (diff_match_patch.Diff d : Diffs) {
+                                for (final diff_match_patch.Diff d : Diffs) {
                                     if (d.operation != diff_match_patch.Operation.EQUAL) {
                                         System.out.println(d);
-                                        UI.updateProgress(d.toString());
+                                     //   UI.updateProgress(line + " " + d.toString());
+                                        java.awt.EventQueue.invokeLater(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                UI.updateProgress(lineNum + d.toString());
+                                            }
+                                        });                
                                     }
                                 }
                             }
+                            
+                            
                         }
                     } catch (FileNotFoundException e) {
                         System.out.println("File not found !" + e.getMessage());
                     } catch (IOException ioe) {
                         System.out.println("IO Exception!");
                     }
-                     
+                 
+              //      UI.saveBASOriginal();
                 }
 
 
