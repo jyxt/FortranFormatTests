@@ -145,16 +145,17 @@ public class WatchDir {
             //        UI.updateProgress("BAS changed");
                     
                     
-                    getModel().readBAS(model.getBAS(), false);
-                    UI.updateProgress(getModel().iboundStats());
+               //     getModel().readBAS(model.getBAS(), false);
+  //                  UI.updateProgress(getModel().iboundStats());
                     
-                    /*
+                    
                     diff_match_patch diff = new diff_match_patch();
                     try {
-                        try (BufferedReader in2 = new BufferedReader(new FileReader(child.toString())); BufferedReader in = new BufferedReader(new FileReader(child.toString()+"_Original"))) {
-                            String strRead;
-                            while ((strRead = in.readLine()) != null) {
-                                LinkedList<diff_match_patch.Diff> Diffs = diff.diff_main(strRead, in2.readLine());
+                        try (BufferedReader in2 = new BufferedReader(new FileReader(child.toString()));
+                             BufferedReader in = new BufferedReader(new FileReader(child.toString()+"_Original"))) {
+                            String strRead, strRead2;
+                            while ((strRead = in.readLine()) != null && (strRead2 = in2.readLine()) != null) {
+                                LinkedList<diff_match_patch.Diff> Diffs = diff.diff_main(strRead, strRead2);
                                 for (diff_match_patch.Diff d : Diffs) {
                                     if (d.operation != diff_match_patch.Operation.EQUAL) {
                                         System.out.println(d);
@@ -168,7 +169,7 @@ public class WatchDir {
                     } catch (IOException ioe) {
                         System.out.println("IO Exception!");
                     }
-                    */ 
+                     
                 }
 
 
