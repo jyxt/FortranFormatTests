@@ -106,7 +106,7 @@ public class WatchDir {
     /**
      * Process all events for keys queued to the watcher
      */
-    void processEvents() {
+    synchronized  void processEvents() {
         for (;;) {
 
             // wait for key to be signalled
@@ -144,6 +144,11 @@ public class WatchDir {
                     System.out.println("BAS changed"); 
             //        UI.updateProgress("BAS changed");
                     
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(WatchDir.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                     
                     getModel().readBAS(model.getBAS(), false);
                     UI.updateProgress(getModel().iboundStats());
