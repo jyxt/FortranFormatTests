@@ -126,8 +126,12 @@ public class SimpleUI extends javax.swing.JFrame {
             this.path = fc.getSelectedFile().getParent() + File.separator; // directory
             jTextField1.setText(fileName);
             System.out.println(path);
-            name = fc.getSelectedFile().getName().split("\\.")[0];
+            //name = fc.getSelectedFile().getName().split("\\.")[0];str.substring(0, str.lastIndexOf('.'))
+            String nameWithExtension = fc.getSelectedFile().getName();
+            name = nameWithExtension.substring(0, nameWithExtension.lastIndexOf('.'));
+
             System.out.println(name);
+            updateProgress(path);
         }
 
     }//GEN-LAST:event_jButton1ActionPerformed
@@ -137,10 +141,14 @@ public class SimpleUI extends javax.swing.JFrame {
         if (path == null || path.length() == 0) {
             JOptionPane.showMessageDialog(null, "Select a project first");
         } else {                                  
-            getDimensionFromDIS(path + File.separator + name + ".DIS"); // get j i k
+            updateProgress(path + name + ".DIS");
+            //getDimensionFromDIS(path + File.separator + name + ".DIS"); // get j i k
+            getDimensionFromDIS(path + name + ".DIS"); // get j i k
+            
             updateProgress("Logging is started... reading BAS file");
             try {
-                Files.copy(Paths.get(path+File.separator+name+".BAS"), Paths.get(path+File.separator+name+".BAS"+"_Original"), StandardCopyOption.REPLACE_EXISTING);
+               // Files.copy(Paths.get(path+File.separator+name+".BAS"), Paths.get(path+File.separator+name+".BAS"+"_Original"), StandardCopyOption.REPLACE_EXISTING);
+                Files.copy(Paths.get(path+name+".BAS"), Paths.get(path+name+".BAS"+"_Original"), StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException ex) {
                 Logger.getLogger(SimpleUI.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -153,10 +161,13 @@ public class SimpleUI extends javax.swing.JFrame {
                     WatchDir wd;
                     try {
 
-                        String BAS = path + File.separator + name + ".BAS";
+                 //       String BAS = path + File.separator + name + ".BAS";
                         Model model = new Model(SimpleUI.this.j, SimpleUI.this.i, SimpleUI.this.k);
-                        model.readBAS(BAS, true);
-                        model.setBAS(BAS);
+                        model.setPath(path);
+                        model.setName(name);
+                        model.readBAS(model.getBAS(), true);
+                        model.getXYfromDIS(model.getDIS());
+                        
                         wd = new WatchDir(dir, false, SimpleUI.this); //non-recusive\
                         wd.setModel(model);
                         wd.processEvents();
@@ -259,7 +270,8 @@ public class SimpleUI extends javax.swing.JFrame {
     public void saveBASOriginal()
     {
         try {
-            Files.copy(Paths.get(path+File.separator+name+".BAS"), Paths.get(path+File.separator+name+".BAS"+"_Original"), StandardCopyOption.REPLACE_EXISTING);
+          //  Files.copy(Paths.get(path+File.separator+name+".BAS"), Paths.get(path+File.separator+name+".BAS"+"_Original"), StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(Paths.get(path+name+".BAS"), Paths.get(path+name+".BAS"+"_Original"), StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException ex) {
             Logger.getLogger(SimpleUI.class.getName()).log(Level.SEVERE, null, ex);
         }

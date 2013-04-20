@@ -8,6 +8,8 @@ package fortranformattests;
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
@@ -23,6 +25,8 @@ import java.io.*;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
 
 /**
  * Example to watch a directory (or tree) for changes to files.
@@ -35,6 +39,7 @@ public class WatchDir {
     private boolean trace = true;
     SimpleUI UI;
     private Model model;
+    int BASTimes;
     
     @SuppressWarnings("unchecked")
     static <T> WatchEvent<T> cast(WatchEvent<?> event) {
@@ -101,12 +106,14 @@ public class WatchDir {
         // enable trace after initial registration
         this.trace = true;
         this.UI=UI;
+        
+        BASTimes=0;
     }
 
     /**
      * Process all events for keys queued to the watcher
      */
-    synchronized  void processEvents() {
+     void processEvents() {
         for (;;) {
 
             // wait for key to be signalled
@@ -140,18 +147,47 @@ public class WatchDir {
                 System.out.format("%s: %s\n", event.kind().name(), child);
 
                 
-                if (child.getFileName().toString().split("\\.")[child.getFileName().toString().split("\\.").length-1].equals("BAS")) {
+                
+                if (child.getFileName().toString().split("\\.")[child.getFileName().toString().split("\\.").length-1].equals("BAS"))
+                {
+                    BASTimes++;
+                }
+                    
+                if (BASTimes==2) {
+                    BASTimes = 0;
                     System.out.println("BAS changed"); 
             //        UI.updateProgress("BAS changed");
                     
                     try {
-                        Thread.sleep(1000);
+                        Thread.sleep(3000);
                     } catch (InterruptedException ex) {
                         Logger.getLogger(WatchDir.class.getName()).log(Level.SEVERE, null, ex);
                     }
                     
                     getModel().readBAS(model.getBAS(), false);
+                    
                     UI.updateProgress(getModel().iboundStats());
+                    
+                    final JFrame frame;
+                    frame = new JFrame("IBOUND");
+                    frame.setLocationRelativeTo(null);
+                    int w = 1000;
+                    int h = 1000;
+                    frame.setSize(w + 100, 200 + h);
+                    ModelPanel panel = new ModelPanel(model);                    
+                    panel.setLayer(1);
+                    
+                    frame.getContentPane().add(panel);
+                    frame.setVisible(true);
+                    frame.addWindowListener(new WindowAdapter() {
+                        @Override
+                        public void windowClosing(WindowEvent e) {
+                            frame.setVisible(false);
+                            frame.removeAll();
+                            frame.dispose();
+                        }
+                    });
+                    
                     
                     /*
                     diff_match_patch diff = new diff_match_patch();
