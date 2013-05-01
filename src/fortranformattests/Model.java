@@ -4,11 +4,15 @@
  */
 package fortranformattests;
 
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,7 +20,9 @@ import java.util.HashSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 
 /**
  *
@@ -31,10 +37,11 @@ public class Model {
     private String path;
     private String name;
     private String BAS, DIS;
-    private double[] delx;
-    private double[] dely;
+    public double[] delx;
+    public double[] dely;
     public double[] x,y;
     private HashSet<JIK> iboundChanged;
+    public double[][] modelTop;
     
     
     Model(int j, int i, int k)
@@ -47,6 +54,7 @@ public class Model {
         this.x = new double[this.j+1];
         this.y = new double[this.i+1];
         this.iboundChanged = new HashSet<>();
+        this.modelTop = new double[this.j+1][this.i+1];
                 
         for (int c = 0; c <= this.j; c++) {
             for (int r = 0; r <= this.i; r++) {
@@ -55,6 +63,7 @@ public class Model {
                 }
                 this.dely[r]=0.0;
                 this.y[r]=0.0;
+                this.modelTop[c][r]=0.0;
             }
             this.delx[c]=0.0;
             this.x[c]=0.0;
@@ -192,19 +201,17 @@ public class Model {
                             ArrayList<Object> RowofIbounds = FortranFormat.read(strRead, specificationString);
                             for (Object o : RowofIbounds) {
                                 if (o != null) {
-                       //             System.out.println(c + " " + r + " " + l + " " + o);
+                                    //             System.out.println(c + " " + r + " " + l + " " + o);
                                     int newIbound = Integer.parseInt(o.toString());
-                                    if(!firstTime) 
-                                    {
-                                        if(this.cell[c][r][l].getIbound()!=newIbound)
-                                        {
-                                            getIboundChanged().add(new JIK(c,r,l));
-                                            System.out.println(c+" "+r+" "+l);
-                                        }                                        
+                                    if (!firstTime) {
+                                        if (this.cell[c][r][l].getIbound() != newIbound) {
+                                            getIboundChanged().add(new JIK(c, r, l));
+                                            System.out.println(c + " " + r + " " + l);
+                                        }
                                     }
-                                    
-                                        this.cell[c][r][l].setIbound(newIbound);
-                                    
+
+                                    this.cell[c][r][l].setIbound(newIbound);
+
                                     c++;
                                 }
 
@@ -213,13 +220,51 @@ public class Model {
                         r++;
                     }
                     l++;
+                }
+                
+     
 
-            }
+                 c = 1;
+                 r = 1;
+                 l = 1;
 
+                in.readLine();//SKIP 1.0E30
+                String headFortran = "(10G12.5)";
+                
+                while (l <= this.getK()) {
+                    // skip the line with format specifier for now since it is always (40I2) for V. Should be made dynamic in the future                
+                    in.readLine();
+                    if (r > this.getI()) {
+                        r = 1;
+                    }
+                    while (r <= this.getI()) {
+
+                        if (c > this.getJ()) {
+                            c = 1;
+                        }
+                        while (c <= this.getJ()) {
+                            strRead = in.readLine();
+                            ArrayList<Object> RowofInitHeads = FortranFormat.read(strRead, headFortran);
+                            for (Object o : RowofInitHeads) {
+                                if (o != null) {
+                                    //             System.out.println(c + " " + r + " " + l + " " + o);
+                                    double newInitHead = Double.parseDouble(o.toString()); 
+
+                                    this.cell[c][r][l].setInitHead(newInitHead);
+
+                                    c++;
+                                }
+
+                            }
+                        }
+                        r++;
+                    }
+                    l++;
+                }
 
             //      if(!firstTime) this.dir.updateUI(model.iboundStats());
         } catch (FileNotFoundException ex) {
-            Logger.getLogger(Model.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Model.class.getName()).log(Level.SEVERE, "file not found", ex);
         } catch (IOException | ParseException ex) {
             Logger.getLogger(Model.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -340,5 +385,73 @@ public class Model {
     }
 
         
+    public static void main(String args[])
+    {
+        String  BAS = "J:\\Jacob Workbook\\DATA\\Detour Lake\\Detour 2013\\hydrograph\\model\\DETOUR_CPIT13_translated by VMClassic.bas";     
+    //    String  BAS = "C:\\0-Modeling projects\\25-detour_CPIT13\\DETOUR_CPIT13.bas";             
+        String DIS = "C:\\0-Modeling projects\\25b-detour2013-4.2\\DETOUR_CPIT13.DIS";
+        Model model = new Model(800, 609, 21);
+  //      model.getXYfromDIS(DIS);
+        model.readBAS(BAS, true);
+         DISReader dr = new DISReader(model);
+       //dr.read(DIS);
+        //ListDataReader ldr = new ListDataReader((model));
+       // ldr.readListData("J:\\Jacob Workbook\\DATA\\Detour Lake\\Detour 2013\\hydrograph\\model\\4.6head_bttomCompare.txt", ListDataReader.ListDataType.Other);
+        
+       
+        
+     //   BASWritter bw = new BASWritter(model);
+     //   bw.write("C:\\0-Modeling projects\\25b-detour2013-4.2\\DETOUR_CPIT13_new.BAS");
+        
+        final JFrame frame;
+        frame = new JFrame("BAS");
+
+        frame.setLocationRelativeTo(null);
+             int w = 1000;
+             int h = 1000;
+             frame.setSize(w + 100, 200 + h);
+        ModelPanel panel = new ModelPanel(model);                    
+      //  frame.add(panel);
+     //   panel.setLayer(1);        
+
+        Viewer viewer = new Viewer(panel);
+        viewer.setLayer(1);
+        frame.getContentPane().add(viewer);
+        frame.setVisible(true);
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                frame.setVisible(false);
+                frame.removeAll();
+                frame.dispose();
+            }
+        });
+        
+        
+        /*
+        // print ibound and initial head in "vmod exported" format
+        try {
+            PrintWriter out = new PrintWriter(new FileOutputStream("J:\\Jacob Workbook\\DATA\\Detour Lake\\Detour 2013\\hydrograph\\model\\initHead.txt"));
+            PrintWriter out2 = new PrintWriter(new FileOutputStream("J:\\Jacob Workbook\\DATA\\Detour Lake\\Detour 2013\\hydrograph\\model\\ib.txt"));
+            for (int kk = 21; kk >= 1; kk--) {
+                for (int ii = 1; ii <= 609; ii++) {
+
+                    for (int jj = 1; jj <= 800; jj++) {
+                        out.println(ii + "\t" + jj + "\t" + kk + "\t" + model.cell[jj][ii][kk].getInitHead());
+                        out2.println(ii + "\t" + jj + "\t" + kk + "\t" + model.cell[jj][ii][kk].getIbound());
+                    }
+                }
+            }
+            out.close();
+            out2.close();
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(Model.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        */
+  
+
+    }
+
+
     
 }

@@ -16,6 +16,7 @@ import java.awt.image.BufferedImage;
 import java.util.HashSet;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 
 /**
  *
@@ -26,6 +27,11 @@ public class ModelPanel extends NavigableImagePanel{
     private Model theModel;
     private int layer;
     private ModelProperty property;
+    
+    public ModelPanel()
+    {
+        property = ModelProperty.IBOUND;
+    }
     
     public ModelPanel(Model aModel)
     {
@@ -61,7 +67,7 @@ public class ModelPanel extends NavigableImagePanel{
      */
     public void setLayer(int layer) { // offset by 1
         this.layer = layer;
-        this.setImage(this.model2Image(theModel));
+        this.setImage(this.model2Image(getTheModel()));
         repaint();
     }
 
@@ -124,9 +130,10 @@ public class ModelPanel extends NavigableImagePanel{
         for (int jj = 1;jj <numberOfColumns; jj++)
         {
             for (int ii=1;ii<numberOfRows;ii++)
-            {                
-                int ibound = aModel.cell[jj][ii][layer].getIbound();   // get color form ibound, black or white
-              //  System.out.println(aModel.cell[jj][ii][1].getIbound());
+            {   
+        
+                
+                int ibound = aModel.cell[jj][ii][getLayer()].getIbound();   // get color form ibound, black or white              
                 if(ibound==0)
                 {
                     g.setColor(new Color(50, 150, 100));
@@ -136,19 +143,63 @@ public class ModelPanel extends NavigableImagePanel{
                 }else if(ibound==-1)
                 {
                     g.setColor(new Color(255,255,255));
-                    //g.setColor(new Color(50,50,150));                    
-                }else 
+                  //  g.setColor(new Color(50,50,150));                  // show BC
+                }
+
+                
+                /*
+                else 
                 {
                     JOptionPane.showMessageDialog(null, "invalid ibound found");
                     return null;
                 }
+                */ 
                 
-                if(iboundChanged.contains(new JIK(jj,ii,layer)))
+                /*
+                //temp
+                if(aModel.cell[jj][ii][getLayer()].getInitHead()<230)
                 {
-                    g.setColor(new Color(255,25,50));
+                    
+                    g.setColor(new Color(255,25,50)); // red
+                }
+                if (aModel.cell[jj][ii][getLayer()].getInitHead() < 230 && aModel.cell[jj][ii][getLayer()].getIbound()==1) {
+
+                    System.out.println("Cell " + jj+" " + ii + " "+getLayer()+ " initial head "+  aModel.cell[jj][ii][getLayer()].getInitHead() +"<230 and ibound is 1");
+                    if(aModel.cell[jj+1][ii][getLayer()].getInitHead() > 230 ) System.out.println("Neighbour cell "+(jj+1)+" "+ii+" "+ getLayer()+" is "+ aModel.cell[jj+1][ii][getLayer()].getInitHead());
+                    if(aModel.cell[jj-1][ii][getLayer()].getInitHead() > 230 ) System.out.println("Neighbour cell "+(jj-1)+" "+ii+" "+ getLayer()+" is "+ aModel.cell[jj+1][ii][getLayer()].getInitHead());
+                    if(aModel.cell[jj][1+ii][getLayer()].getInitHead() > 230 ) System.out.println("Neighbour cell "+ jj +" "+(ii+1)+" "+ getLayer()+" is "+ aModel.cell[jj+1][ii][getLayer()].getInitHead());
+                    if(aModel.cell[jj][ii-1][getLayer()].getInitHead() > 230 ) System.out.println("Neighbour cell "+jj+" "+(ii-1)+" "+ getLayer()+" is "+ aModel.cell[jj+1][ii][getLayer()].getInitHead());
+
+                 }
+                 // temp over
+                 */
+
+                // temp2
+                
+                if (ibound == 3) {
+                    g.setColor(new Color(120, 150, 10)); // shit color
+                    
+                }
+                if (ibound == 2) {
+                    g.setColor(new Color(255, 25, 50));     // red                
+                }
+                 
+                double bottom = aModel.cell[jj][ii][getLayer()].getBottom();   // get bottom 
+                double initHead = aModel.cell[jj][ii][getLayer()].getInitHead();   // get head 
+                if (initHead < -900.0)
+                {
+                    g.setColor(new Color(222, 150, 150)); 
+                }
+                
+                //temp2
+
+
+
+                if (iboundChanged.contains(new JIK(jj, ii, getLayer()))) {
+                    g.setColor(new Color(255, 25, 50)); // red
                     System.out.println("contains");
                 }
-            //    g.setColor(new Color(1,1,1));
+                //    g.setColor(new Color(1,1,1));
                 
                 int CellX = x[jj];                
                 int CellY = y[ii];
@@ -181,9 +232,8 @@ public class ModelPanel extends NavigableImagePanel{
         int w = 1000;
         int h = 1000;
         frame.setSize(w + 100, 200 + h);
-        panel.setLayer(1);
-
-        frame.getContentPane().add(panel);
+        JPanel viewer = new Viewer(panel);        
+        frame.getContentPane().add(viewer);
         frame.setVisible(true);
         frame.addWindowListener(new WindowAdapter() {
             @Override
